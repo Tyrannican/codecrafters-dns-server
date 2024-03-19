@@ -1,4 +1,4 @@
-use crate::message::*;
+use crate::message::header::{DnsHeader, DnsHeaderFlag};
 use std::net::UdpSocket;
 
 #[derive(Debug)]
