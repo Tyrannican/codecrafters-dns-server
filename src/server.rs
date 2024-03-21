@@ -28,12 +28,14 @@ impl DnsServer {
 
                     let mut header = DnsHeader::new(1234);
                     header.question_records = 1;
+                    header.answer_records = 1;
                     header.set_flag(DnsHeaderFlag::Response);
 
                     let question =
                         DnsQuestion::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
 
-                    let answer = DnsAnswer {};
+                    let answer =
+                        DnsAnswer::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
 
                     let message = DnsMessage {
                         header,

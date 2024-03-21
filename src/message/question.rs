@@ -4,7 +4,7 @@ use crate::{
 };
 
 pub(crate) struct DnsQuestion {
-    pub(crate) name: String,
+    pub(crate) name: Vec<u8>,
     pub(crate) record_type: u16,
     pub(crate) record_class: u16,
 }
@@ -16,7 +16,7 @@ impl DnsQuestion {
         record_class: DnsRecordClass,
     ) -> Self {
         Self {
-            name: String::from(domain),
+            name: parse_domain_name(domain),
             record_type: record_type.to_value(),
             record_class: record_class.to_value(),
         }
@@ -26,7 +26,7 @@ impl DnsQuestion {
 impl IntoBytes for DnsQuestion {
     fn into_bytes(self) -> Vec<u8> {
         let mut buf = vec![];
-        buf.extend(parse_domain_name(&self.name));
+        buf.extend(self.name);
         buf.extend(self.record_type.to_be_bytes());
         buf.extend(self.record_class.to_be_bytes());
 

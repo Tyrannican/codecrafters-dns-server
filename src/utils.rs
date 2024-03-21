@@ -1,6 +1,7 @@
 // NOTE: Some record types from https://www.rfc-editor.org/rfc/rfc1035#section-3.2.2
 // have been omitted as they are either experimental or obsolete
 #[allow(dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum DnsRecordType {
     A,
     NS,
@@ -15,8 +16,8 @@ pub(crate) enum DnsRecordType {
 }
 
 impl DnsRecordType {
-    pub(crate) fn to_value(self) -> u16 {
-        match self {
+    pub(crate) fn to_value(&self) -> u16 {
+        match *self {
             Self::A => 1,
             Self::NS => 2,
             Self::CNAME => 5,
@@ -32,6 +33,7 @@ impl DnsRecordType {
 }
 
 #[allow(dead_code)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) enum DnsRecordClass {
     IN,
     CS,
@@ -40,8 +42,8 @@ pub(crate) enum DnsRecordClass {
 }
 
 impl DnsRecordClass {
-    pub(crate) fn to_value(self) -> u16 {
-        match self {
+    pub(crate) fn to_value(&self) -> u16 {
+        match *self {
             Self::IN => 1,
             Self::CS => 2,
             Self::CH => 3,
