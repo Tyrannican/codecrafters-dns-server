@@ -24,14 +24,8 @@ impl DnsServer {
                 Ok((size, source)) => {
                     println!("Received {} bytes from {}", size, source);
 
-                    let mut header = DnsHeader {
-                        id: 1234,
-                        flags: 0,
-                        additional_records: 0,
-                        authority_records: 0,
-                        question_records: 1,
-                        answer_records: 0,
-                    };
+                    let mut header = DnsHeader::new(1234);
+                    header.question_records = 1;
                     header.set_flag(DnsHeaderFlag::Response);
 
                     let question =
