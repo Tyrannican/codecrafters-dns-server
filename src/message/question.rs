@@ -1,7 +1,7 @@
-use nom::AsBytes;
+use crate::message::IntoBytes;
 
 pub(crate) struct DnsQuestion {
-    pub(crate) name: Vec<u8>,
+    pub(crate) name: String,
     pub(crate) record_type: u16,
     pub(crate) record_class: u16,
 }
@@ -33,10 +33,21 @@ impl DnsQuestion {
         };
 
         Self {
-            name: parse_domain_name(domain),
+            name: String::from(domain),
             record_type,
             record_class,
         }
+    }
+}
+
+impl IntoBytes for DnsQuestion {
+    fn into_bytes(self) -> Vec<u8> {
+        let mut buf = vec![];
+        buf.extend(parse_domain_name(&self.name));
+        buf.extend(self.record_type.to_be_bytes());
+        buf.extend(self.record_class.to_be_bytes());
+
+        buf
     }
 }
 

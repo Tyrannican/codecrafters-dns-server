@@ -1,3 +1,5 @@
+use crate::message::IntoBytes;
+
 pub(crate) struct DnsHeader {
     pub(crate) id: u16,
     pub(crate) flags: u16,
@@ -22,19 +24,17 @@ impl DnsHeader {
             DnsHeaderFlag::ResponseCode(code) => self.flags |= code << 0,
         }
     }
+}
 
-    pub(crate) fn as_bytes(self) -> [u8; 12] {
-        // TODO: Improve
-        let mut buf: [u8; 12] = [0; 12];
-        let mut t: Vec<u8> = vec![];
-        t.extend(self.id.to_be_bytes());
-        t.extend(self.flags.to_be_bytes());
-        t.extend(self.question_records.to_be_bytes());
-        t.extend(self.answer_records.to_be_bytes());
-        t.extend(self.authority_records.to_be_bytes());
-        t.extend(self.additional_records.to_be_bytes());
-
-        buf.copy_from_slice(&t);
+impl IntoBytes for DnsHeader {
+    fn into_bytes(self) -> Vec<u8> {
+        let mut buf = vec![];
+        buf.extend(self.id.to_be_bytes());
+        buf.extend(self.flags.to_be_bytes());
+        buf.extend(self.question_records.to_be_bytes());
+        buf.extend(self.answer_records.to_be_bytes());
+        buf.extend(self.authority_records.to_be_bytes());
+        buf.extend(self.additional_records.to_be_bytes());
 
         buf
     }

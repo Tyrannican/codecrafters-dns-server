@@ -1,4 +1,8 @@
-use crate::message::header::{DnsHeader, DnsHeaderFlag};
+use crate::message::{
+    header::{DnsHeader, DnsHeaderFlag},
+    question::{DnsQuestion, DnsRecordClass, DnsRecordType},
+    DnsMessage, IntoBytes,
+};
 use std::net::UdpSocket;
 
 #[derive(Debug)]
@@ -25,11 +29,17 @@ impl DnsServer {
                         flags: 0,
                         additional_records: 0,
                         authority_records: 0,
-                        question_records: 0,
+                        question_records: 1,
                         answer_records: 0,
                     };
                     header.set_flag(DnsHeaderFlag::Response);
-                    let response = header.as_bytes();
+
+                    let question =
+                        DnsQuestion::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
+
+                    let message = DnsMessage { header, question };
+
+                    let response = message.into_bytes();
                     self.connection
                         .send_to(&response, source)
                         .expect("Failed to send response");
