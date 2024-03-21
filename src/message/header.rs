@@ -40,6 +40,7 @@ impl IntoBytes for DnsHeader {
     }
 }
 
+#[allow(dead_code)]
 pub(crate) enum DnsHeaderFlag {
     Response,
     OpCode(u16),

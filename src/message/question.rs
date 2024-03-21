@@ -64,6 +64,7 @@ fn parse_domain_name(domain: &str) -> Vec<u8> {
 
 // NOTE: Some record types from https://www.rfc-editor.org/rfc/rfc1035#section-3.2.2
 // have been omitted as they are either experimental or obsolete
+#[allow(dead_code)]
 pub(crate) enum DnsRecordType {
     A,
     NS,
@@ -77,6 +78,7 @@ pub(crate) enum DnsRecordType {
     TXT,
 }
 
+#[allow(dead_code)]
 pub(crate) enum DnsRecordClass {
     IN,
     CS,
