@@ -1,8 +1,10 @@
 use crate::message::{
+    answer::DnsAnswer,
     header::{DnsHeader, DnsHeaderFlag},
-    question::{DnsQuestion, DnsRecordClass, DnsRecordType},
+    question::DnsQuestion,
     DnsMessage, IntoBytes,
 };
+use crate::utils::{DnsRecordClass, DnsRecordType};
 use std::net::UdpSocket;
 
 #[derive(Debug)]
@@ -31,7 +33,13 @@ impl DnsServer {
                     let question =
                         DnsQuestion::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
 
-                    let message = DnsMessage { header, question };
+                    let answer = DnsAnswer {};
+
+                    let message = DnsMessage {
+                        header,
+                        question,
+                        answer,
+                    };
 
                     let response = message.into_bytes();
                     self.connection

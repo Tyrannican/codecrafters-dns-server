@@ -1,5 +1,6 @@
 pub(crate) mod message;
 pub(crate) mod server;
+pub(crate) mod utils;
 
 use server::DnsServer;
 
