@@ -51,7 +51,6 @@ impl IntoBytes for DnsAnswer {
 fn parse_data(record_type: DnsRecordType) -> (u16, u32) {
     match record_type {
         DnsRecordType::A => {
-            let length = 4;
             let ip = Ipv4Addr::new(8, 8, 8, 8);
             let octets = ip.octets();
 
