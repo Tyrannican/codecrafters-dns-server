@@ -21,21 +21,20 @@ impl DnsHeader {
         }
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Self {
-        let mut header = DnsHeader::new(0);
+    pub(crate) fn from_bytes(bytes: &[u8]) -> Self {
         let header_info = bytes
             .chunks(2)
             .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
             .collect::<Vec<u16>>();
 
-        header.id = header_info[0];
-        header.flags = header_info[1];
-        header.question_records = header_info[2];
-        header.answer_records = header_info[3];
-        header.authority_records = header_info[4];
-        header.additional_records = header_info[5];
-
-        header
+        Self {
+            id: header_info[0],
+            flags: header_info[1],
+            question_records: header_info[2],
+            answer_records: header_info[3],
+            authority_records: header_info[4],
+            additional_records: header_info[5],
+        }
     }
 
     pub(crate) fn set_flag(&mut self, flag: DnsHeaderFlag) {
