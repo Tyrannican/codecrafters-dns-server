@@ -5,6 +5,7 @@ use crate::message::{
     DnsMessage, IntoBytes,
 };
 use crate::utils::{DnsRecordClass, DnsRecordType};
+use anyhow::{bail, Result};
 use std::net::UdpSocket;
 
 #[derive(Debug)]
@@ -23,26 +24,30 @@ impl DnsServer {
         // NOTE: 0 is passed here as it isn't used
         let op_code = recv_header.get_flag(DnsHeaderFlag::OpCode(0));
 
-        let mut header = DnsHeader::new(recv_header.id);
-        header.set_flag(DnsHeaderFlag::Response);
-        header.set_flag(DnsHeaderFlag::OpCode(op_code));
+        let mut response_header = DnsHeader::new(recv_header.id);
+        response_header.set_flag(DnsHeaderFlag::Response);
+        response_header.set_flag(DnsHeaderFlag::OpCode(op_code));
+
         if recv_header.get_flag(DnsHeaderFlag::RecursionDesired) > 0 {
-            header.set_flag(DnsHeaderFlag::RecursionDesired);
+            response_header.set_flag(DnsHeaderFlag::RecursionDesired);
         }
 
         if op_code == 0 {
-            header.set_flag(DnsHeaderFlag::ResponseCode(0));
+            response_header.set_flag(DnsHeaderFlag::ResponseCode(0));
         } else {
-            header.set_flag(DnsHeaderFlag::ResponseCode(4));
+            response_header.set_flag(DnsHeaderFlag::ResponseCode(4));
         }
 
-        header.question_records = 1;
-        header.answer_records = 1;
+        response_header.question_records = recv_header.question_records;
+        // NOTE: Is this going to be set to the number of questions in the recv_header?
+        response_header.answer_records = recv_header.question_records;
+        response_header.additional_records = recv_header.additional_records;
+        response_header.authority_records = recv_header.authority_records;
 
-        header
+        response_header
     }
 
-    pub(crate) fn listen(&self) {
+    pub(crate) fn listen(&self) -> Result<()> {
         let mut buffer = [0; 512];
 
         loop {
@@ -70,7 +75,7 @@ impl DnsServer {
                 }
                 Err(e) => {
                     eprintln!("Error receiving data: {}", e);
-                    break;
+                    bail!("something went wrong")
                 }
             }
         }
