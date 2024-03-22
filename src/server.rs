@@ -18,6 +18,30 @@ impl DnsServer {
         Self { connection }
     }
 
+    fn parse_header(&self, buffer: &[u8]) -> DnsHeader {
+        let recv_header = DnsHeader::from_bytes(&buffer[..12]);
+        // NOTE: 0 is passed here as it isn't used
+        let op_code = recv_header.get_flag(DnsHeaderFlag::OpCode(0));
+
+        let mut header = DnsHeader::new(recv_header.id);
+        header.set_flag(DnsHeaderFlag::Response);
+        header.set_flag(DnsHeaderFlag::OpCode(op_code));
+        if recv_header.get_flag(DnsHeaderFlag::RecursionDesired) > 0 {
+            header.set_flag(DnsHeaderFlag::RecursionDesired);
+        }
+
+        if op_code == 0 {
+            header.set_flag(DnsHeaderFlag::ResponseCode(0));
+        } else {
+            header.set_flag(DnsHeaderFlag::ResponseCode(4));
+        }
+
+        header.question_records = 1;
+        header.answer_records = 1;
+
+        header
+    }
+
     pub(crate) fn listen(&self) {
         let mut buffer = [0; 512];
 
@@ -25,25 +49,7 @@ impl DnsServer {
             match self.connection.recv_from(&mut buffer) {
                 Ok((size, source)) => {
                     println!("Received {} bytes from {}", size, source);
-                    let recv_header = DnsHeader::from_bytes(&buffer[..12]);
-                    // NOTE: 0 is passed here as it isn't used
-                    let op_code = recv_header.get_flag(DnsHeaderFlag::OpCode(0));
-
-                    let mut header = DnsHeader::new(recv_header.id);
-                    header.set_flag(DnsHeaderFlag::Response);
-                    header.set_flag(DnsHeaderFlag::OpCode(op_code));
-                    if recv_header.get_flag(DnsHeaderFlag::RecursionDesired) > 0 {
-                        header.set_flag(DnsHeaderFlag::RecursionDesired);
-                    }
-
-                    if op_code == 0 {
-                        header.set_flag(DnsHeaderFlag::ResponseCode(0));
-                    } else {
-                        header.set_flag(DnsHeaderFlag::ResponseCode(4));
-                    }
-
-                    header.question_records = 1;
-                    header.answer_records = 1;
+                    let header = self.parse_header(&buffer[..12]);
 
                     let question =
                         DnsQuestion::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
