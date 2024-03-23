@@ -56,16 +56,17 @@ impl DnsServer {
                     println!("Received {} bytes from {}", size, source);
                     let header = self.parse_header(&buffer[..12]);
 
-                    let question =
-                        DnsQuestion::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
-
-                    let answer =
-                        DnsAnswer::new("codecrafters.io", DnsRecordType::A, DnsRecordClass::IN);
+                    let questions =
+                        DnsQuestion::from_bytes(header.question_records, &buffer[12..])?;
+                    let mut answers = vec![];
+                    for question in questions.iter() {
+                        answers.push(DnsAnswer::from_question(question));
+                    }
 
                     let message = DnsMessage {
                         header,
-                        question,
-                        answer,
+                        question_records: questions,
+                        answer_records: answers,
                     };
 
                     let response = message.into_bytes();

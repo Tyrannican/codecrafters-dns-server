@@ -1,4 +1,4 @@
-use crate::message::IntoBytes;
+use crate::message::{question::DnsQuestion, IntoBytes};
 use crate::utils::*;
 
 use std::net::Ipv4Addr;
@@ -25,6 +25,20 @@ impl DnsAnswer {
             name: parse_domain_name(domain),
             record_type: record_type.to_value(),
             record_class: record_class.to_value(),
+            ttl: 60,
+            length,
+            data,
+        }
+    }
+
+    pub(crate) fn from_question(question: &DnsQuestion) -> Self {
+        let record_t = DnsRecordType::from_value(question.record_type);
+        let (length, data) = parse_data(record_t);
+
+        Self {
+            name: question.name.clone(),
+            record_type: question.record_type,
+            record_class: question.record_class,
             ttl: 60,
             length,
             data,

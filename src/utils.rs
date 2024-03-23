@@ -30,6 +30,22 @@ impl DnsRecordType {
             Self::TXT => 16,
         }
     }
+
+    pub(crate) fn from_value(value: u16) -> Self {
+        match value {
+            1 => Self::A,
+            2 => Self::NS,
+            5 => Self::CNAME,
+            6 => Self::SOA,
+            11 => Self::WKS,
+            12 => Self::PTR,
+            13 => Self::HINFO,
+            14 => Self::MINFO,
+            15 => Self::MX,
+            16 => Self::TXT,
+            _ => unimplemented!("no others"),
+        }
+    }
 }
 
 #[allow(dead_code)]
