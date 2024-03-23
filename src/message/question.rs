@@ -46,8 +46,8 @@ impl DnsQuestion {
                     }
                     domain_buf.push(0);
 
-                    let record_type = u16::from_be_bytes([byte, buffer[idx + 1]]);
-                    let record_class = u16::from_be_bytes([buffer[idx + 2], buffer[idx + 3]]);
+                    let record_type = u16::from_be_bytes([buffer[idx + 1], buffer[idx + 2]]);
+                    let record_class = u16::from_be_bytes([buffer[idx + 3], buffer[idx + 4]]);
                     questions.push(DnsQuestion {
                         domain: domain_buf.clone(),
                         record_type,
@@ -64,8 +64,8 @@ impl DnsQuestion {
                     continue;
                 }
                 domain_buf.push(0);
-                let record_type = u16::from_be_bytes([byte, buffer[idx + 1]]);
-                let record_class = u16::from_be_bytes([buffer[idx + 2], buffer[idx + 3]]);
+                let record_type = u16::from_be_bytes([buffer[idx + 1], buffer[idx + 2]]);
+                let record_class = u16::from_be_bytes([buffer[idx + 3], buffer[idx + 4]]);
                 questions.push(DnsQuestion {
                     domain: domain_buf.clone(),
                     record_type,
