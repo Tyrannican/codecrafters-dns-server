@@ -46,7 +46,7 @@ impl DnsServer {
         response_header
     }
 
-    pub(crate) fn listen(&self) -> Result<()> {
+    pub(crate) fn listen(&self, resolver: &Option<String>) -> Result<()> {
         let mut buffer = [0; 512];
 
         loop {
