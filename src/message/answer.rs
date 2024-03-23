@@ -13,24 +13,6 @@ pub(crate) struct DnsAnswer {
 }
 
 impl DnsAnswer {
-    pub(crate) fn new(
-        domain: &str,
-        record_type: DnsRecordType,
-        record_class: DnsRecordClass,
-    ) -> Self {
-        // TODO: Parse appropriately
-        let (length, data) = parse_data(record_type);
-
-        Self {
-            domain: parse_domain_name(domain),
-            record_type: record_type.to_value(),
-            record_class: record_class.to_value(),
-            ttl: 60,
-            length,
-            data,
-        }
-    }
-
     pub(crate) fn from_question(question: &DnsQuestion) -> Self {
         let record_t = DnsRecordType::from_value(question.record_type);
         let (length, data) = parse_data(record_t);

@@ -16,21 +16,6 @@ pub(crate) enum DnsRecordType {
 }
 
 impl DnsRecordType {
-    pub(crate) fn to_value(&self) -> u16 {
-        match *self {
-            Self::A => 1,
-            Self::NS => 2,
-            Self::CNAME => 5,
-            Self::SOA => 6,
-            Self::WKS => 11,
-            Self::PTR => 12,
-            Self::HINFO => 13,
-            Self::MINFO => 14,
-            Self::MX => 15,
-            Self::TXT => 16,
-        }
-    }
-
     pub(crate) fn from_value(value: u16) -> Self {
         match value {
             1 => Self::A,
@@ -55,28 +40,6 @@ pub(crate) enum DnsRecordClass {
     CS,
     CH,
     HS,
-}
-
-impl DnsRecordClass {
-    pub(crate) fn to_value(&self) -> u16 {
-        match *self {
-            Self::IN => 1,
-            Self::CS => 2,
-            Self::CH => 3,
-            Self::HS => 4,
-        }
-    }
-}
-
-pub(crate) fn parse_domain_name(domain: &str) -> Vec<u8> {
-    let mut encoded = vec![];
-    for label in domain.split('.') {
-        encoded.push(label.len() as u8);
-        encoded.extend(label.as_bytes());
-    }
-    encoded.push(0);
-
-    encoded
 }
 
 pub(crate) fn get_bits(value: u16, bits: u8, offset: u8) -> u16 {
