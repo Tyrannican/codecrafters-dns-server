@@ -3,6 +3,7 @@ use std::io::BufRead;
 use crate::{message::IntoBytes, utils::get_bits};
 use anyhow::Result;
 
+#[derive(Debug)]
 pub(crate) struct DnsQuestion {
     pub(crate) domain: Vec<u8>,
     pub(crate) record_type: u16,
@@ -10,30 +11,28 @@ pub(crate) struct DnsQuestion {
 }
 
 impl DnsQuestion {
-    // TODO: Improve cause this is awful
+    // TODO: Fix mad offset shenanigans
     pub(crate) fn from_bytes(total_q: u16, buffer: &[u8]) -> Result<Vec<Self>> {
-        // NOTE: This might include the header so be aware
         let mut idx = 0;
-        let mut parsed_q = 0;
         let mut domain_buf = vec![];
         let mut questions = vec![];
 
         loop {
-            if idx >= buffer.len() || parsed_q == total_q {
+            if idx >= buffer.len() || questions.len() == total_q as usize {
                 break;
             }
 
             let byte = buffer[idx];
             if is_compressed_domain(byte) {
-                let (read, domain) = decompress_domain(byte, buffer)?;
+                let domain = decompress_domain(buffer[idx + 1], buffer)?;
                 domain_buf.extend(domain);
-                let tmp_idx = idx + read;
+                let tmp_idx = idx + 2;
                 questions.push(DnsQuestion {
                     domain: domain_buf.clone(),
-                    record_type: u16::from_be_bytes([buffer[tmp_idx + 1], buffer[tmp_idx + 2]]),
-                    record_class: u16::from_be_bytes([buffer[tmp_idx + 3], buffer[tmp_idx + 4]]),
+                    record_type: u16::from_be_bytes([buffer[tmp_idx], buffer[tmp_idx + 1]]),
+                    record_class: u16::from_be_bytes([buffer[tmp_idx + 2], buffer[tmp_idx + 3]]),
                 });
-                idx += 5;
+                idx += 4;
             } else {
                 if byte != 0 {
                     domain_buf.push(byte);
@@ -47,8 +46,8 @@ impl DnsQuestion {
                     record_type: u16::from_be_bytes([buffer[idx + 1], buffer[idx + 2]]),
                     record_class: u16::from_be_bytes([buffer[idx + 3], buffer[idx + 4]]),
                 });
-                parsed_q += 1;
                 idx += 5;
+                domain_buf.clear();
             }
         }
 
@@ -60,14 +59,14 @@ fn is_compressed_domain(byte: u8) -> bool {
     get_bits(byte as u16, 2, 6) == 3
 }
 
-fn decompress_domain(offset: u8, buffer: &[u8]) -> Result<(usize, Vec<u8>)> {
-    let offset_idx = 0b00 << 6 & offset;
-    dbg!(offset_idx);
-    let mut offset_buf = &buffer[offset_idx as usize..];
+fn decompress_domain(offset: u8, buffer: &[u8]) -> Result<Vec<u8>> {
+    // NOTE: - 12 accounts for the header bytes
+    let offset = offset - 12;
+    let mut offset_buf = &buffer[offset as usize..];
     let mut domain_buf = vec![];
-    let read = offset_buf.read_until(0, &mut domain_buf)?;
+    offset_buf.read_until(0, &mut domain_buf)?;
 
-    Ok((read, domain_buf))
+    Ok(domain_buf)
 }
 
 impl IntoBytes for DnsQuestion {
