@@ -4,7 +4,7 @@ use crate::utils::*;
 use std::net::Ipv4Addr;
 
 pub(crate) struct DnsAnswer {
-    pub(crate) name: Vec<u8>,
+    pub(crate) domain: Vec<u8>,
     pub(crate) record_type: u16,
     pub(crate) record_class: u16,
     pub(crate) ttl: u32,
@@ -22,7 +22,7 @@ impl DnsAnswer {
         let (length, data) = parse_data(record_type);
 
         Self {
-            name: parse_domain_name(domain),
+            domain: parse_domain_name(domain),
             record_type: record_type.to_value(),
             record_class: record_class.to_value(),
             ttl: 60,
@@ -36,7 +36,7 @@ impl DnsAnswer {
         let (length, data) = parse_data(record_t);
 
         Self {
-            name: question.name.clone(),
+            domain: question.domain.clone(),
             record_type: question.record_type,
             record_class: question.record_class,
             ttl: 60,
@@ -50,7 +50,7 @@ impl IntoBytes for DnsAnswer {
     fn into_bytes(self) -> Vec<u8> {
         let mut buf = vec![];
 
-        buf.extend(self.name);
+        buf.extend(self.domain);
         buf.extend(self.record_type.to_be_bytes());
         buf.extend(self.record_class.to_be_bytes());
         buf.extend(self.ttl.to_be_bytes());

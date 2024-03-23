@@ -1,4 +1,5 @@
 use crate::message::IntoBytes;
+use crate::utils::get_bits;
 
 pub(crate) struct DnsHeader {
     pub(crate) id: u16,
@@ -53,11 +54,6 @@ impl DnsHeader {
     }
 
     pub(crate) fn get_flag(&self, flag: DnsHeaderFlag) -> u16 {
-        fn get_bits(value: u16, bits: u8, offset: u8) -> u16 {
-            let mask = (1 << bits) - 1;
-            (value >> offset) & mask as u16
-        }
-
         match flag {
             DnsHeaderFlag::Response => get_bits(self.flags, 1, 15),
             DnsHeaderFlag::OpCode(_) => get_bits(self.flags, 4, 11),

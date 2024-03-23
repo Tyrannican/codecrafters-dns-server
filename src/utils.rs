@@ -78,3 +78,8 @@ pub(crate) fn parse_domain_name(domain: &str) -> Vec<u8> {
 
     encoded
 }
+
+pub(crate) fn get_bits(value: u16, bits: u8, offset: u8) -> u16 {
+    let mask = (1 << bits) - 1;
+    (value >> offset) & mask as u16
+}

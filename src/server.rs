@@ -56,8 +56,7 @@ impl DnsServer {
                     println!("Received {} bytes from {}", size, source);
                     let header = self.parse_header(&buffer[..12]);
 
-                    let questions =
-                        DnsQuestion::from_bytes(header.question_records, &buffer[12..])?;
+                    let questions = DnsQuestion::from_bytes(&buffer[12..])?;
                     let mut answers = vec![];
                     for question in questions.iter() {
                         answers.push(DnsAnswer::from_question(question));
