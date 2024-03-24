@@ -78,8 +78,6 @@ impl DnsServer {
                 answers.push(DnsAnswer::from_question(&rq, &dst_buf[12 + ans_offset..]));
             }
 
-            println!("Answer buffer: {:?}", &dst_buf[12 + ans_offset..]);
-
             dst_buf.fill(0);
         }
 
