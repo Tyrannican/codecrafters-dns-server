@@ -12,17 +12,6 @@ pub(crate) struct DnsHeader {
 }
 
 impl DnsHeader {
-    pub(crate) fn new(id: u16) -> Self {
-        Self {
-            id,
-            flags: 0,
-            question_records: 0,
-            answer_records: 0,
-            authority_records: 0,
-            additional_records: 0,
-        }
-    }
-
     pub(crate) fn from_bytes(bytes: &[u8]) -> Self {
         let header_info = bytes
             .chunks(2)

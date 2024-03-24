@@ -19,10 +19,12 @@ impl DnsServer {
     }
 
     fn response_header(&self, recv_header: &DnsHeader) -> DnsHeader {
+        let mut response_header = DnsHeader::default();
+
         // NOTE: 0 is passed here as it isn't used
         let op_code = recv_header.get_flag(DnsHeaderFlag::OpCode(0));
 
-        let mut response_header = DnsHeader::new(recv_header.id);
+        response_header.id = recv_header.id;
         response_header.set_flag(DnsHeaderFlag::Response);
         response_header.set_flag(DnsHeaderFlag::OpCode(op_code));
 
@@ -84,26 +86,15 @@ impl DnsServer {
         Ok((recv_header, questions, answers))
     }
 
-    pub(crate) fn listen(&self, resolver: &Option<String>) -> Result<()> {
+    pub(crate) fn listen(&self, resolver: &String) -> Result<()> {
         let mut buffer = [0; 512];
 
         loop {
             match self.connection.recv_from(&mut buffer) {
                 Ok((size, source)) => {
                     println!("Received {} bytes from {}", size, source);
-                    let Some(resolver_addr) = resolver else {
-                        anyhow::bail!("need a resolver");
-                    };
-                    let (header, questions, answers) = self.forward(resolver_addr, &buffer)?;
-                    //let header = DnsHeader::from_bytes(&buffer[..12]);
-                    //let questions =
-                    //    DnsQuestion::from_bytes(header.question_records, &buffer[12..])?;
 
-                    //let mut answers = vec![];
-                    //for question in questions.iter() {
-                    //    answers.push(DnsAnswer::from_question(question));
-                    //}
-
+                    let (header, questions, answers) = self.forward(resolver, &buffer)?;
                     let response_header = self.response_header(&header);
                     let message = DnsMessage {
                         header: response_header,

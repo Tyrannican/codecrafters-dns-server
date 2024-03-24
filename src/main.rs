@@ -11,7 +11,7 @@ use clap::Parser;
 struct Cli {
     /// DNS resolver address in the form <addr>:<port>
     #[arg(long)]
-    resolver: Option<String>,
+    resolver: String,
 }
 
 fn main() -> anyhow::Result<()> {
