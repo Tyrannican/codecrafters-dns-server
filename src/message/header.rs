@@ -1,6 +1,7 @@
 use crate::message::IntoBytes;
 use crate::utils::get_bits;
 
+#[derive(Default, Clone, Debug)]
 pub(crate) struct DnsHeader {
     pub(crate) id: u16,
     pub(crate) flags: u16,

@@ -13,9 +13,12 @@ pub(crate) struct DnsAnswer {
 }
 
 impl DnsAnswer {
-    pub(crate) fn from_question(question: &DnsQuestion) -> Self {
+    pub(crate) fn from_question(question: &DnsQuestion, buffer: &[u8]) -> Self {
         let record_t = DnsRecordType::from_value(question.record_type);
-        let (length, data) = parse_data(record_t);
+
+        // NOTE: + 8 accounts for the length of the remaining fields
+        let data_section = &buffer[question.domain.len() + 8..];
+        let (length, data) = parse_data(record_t, &data_section);
 
         Self {
             domain: question.domain.clone(),
@@ -44,13 +47,14 @@ impl IntoBytes for DnsAnswer {
 }
 
 // TODO: Improve
-fn parse_data(record_type: DnsRecordType) -> (u16, u32) {
+fn parse_data(record_type: DnsRecordType, data: &[u8]) -> (u16, u32) {
     match record_type {
         DnsRecordType::A => {
-            let ip = Ipv4Addr::new(8, 8, 8, 8);
+            let length = u16::from_be_bytes([data[0], data[1]]);
+            let ip = Ipv4Addr::new(data[2], data[3], data[4], data[5]);
             let octets = ip.octets();
 
-            return (octets.len() as u16, u32::from_be_bytes(octets));
+            return (length, u32::from_be_bytes(octets));
         }
         _ => (0, 0),
     }

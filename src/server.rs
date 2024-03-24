@@ -4,7 +4,7 @@ use crate::message::{
     question::DnsQuestion,
     DnsMessage, IntoBytes,
 };
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::net::UdpSocket;
 
 #[derive(Debug)]
@@ -18,8 +18,7 @@ impl DnsServer {
         Self { connection }
     }
 
-    fn parse_header(&self, buffer: &[u8]) -> DnsHeader {
-        let recv_header = DnsHeader::from_bytes(&buffer[..12]);
+    fn response_header(&self, recv_header: &DnsHeader) -> DnsHeader {
         // NOTE: 0 is passed here as it isn't used
         let op_code = recv_header.get_flag(DnsHeaderFlag::OpCode(0));
 
@@ -46,6 +45,47 @@ impl DnsServer {
         response_header
     }
 
+    fn forward(
+        &self,
+        resolver_addr: &String,
+        src_buf: &[u8],
+    ) -> Result<(DnsHeader, Vec<DnsQuestion>, Vec<DnsAnswer>)> {
+        anyhow::ensure!(resolver_addr.split_once(':').is_some());
+
+        let mut dst_buf = [0; 512];
+        let recv_header = DnsHeader::from_bytes(&src_buf[..12]);
+        let (_, questions) = DnsQuestion::from_bytes(recv_header.question_records, &src_buf[12..])?;
+        let mut answers = vec![];
+
+        for question in questions.iter() {
+            let mut forward_header = recv_header.clone();
+            forward_header.question_records = 1;
+
+            let message = DnsMessage {
+                header: forward_header,
+                question_records: vec![question.clone()],
+                answer_records: vec![],
+            };
+
+            let message = message.into_bytes();
+            self.connection.send_to(&message, resolver_addr)?;
+            self.connection.recv_from(&mut dst_buf)?;
+            let response_header = DnsHeader::from_bytes(&dst_buf[..12]);
+            let (ans_offset, response_questions) =
+                DnsQuestion::from_bytes(response_header.question_records, &dst_buf[12..])?;
+
+            for rq in response_questions.into_iter() {
+                answers.push(DnsAnswer::from_question(&rq, &dst_buf[12 + ans_offset..]));
+            }
+
+            println!("Answer buffer: {:?}", &dst_buf[12 + ans_offset..]);
+
+            dst_buf.fill(0);
+        }
+
+        Ok((recv_header, questions, answers))
+    }
+
     pub(crate) fn listen(&self, resolver: &Option<String>) -> Result<()> {
         let mut buffer = [0; 512];
 
@@ -53,17 +93,22 @@ impl DnsServer {
             match self.connection.recv_from(&mut buffer) {
                 Ok((size, source)) => {
                     println!("Received {} bytes from {}", size, source);
-                    let header = self.parse_header(&buffer[..12]);
+                    let Some(resolver_addr) = resolver else {
+                        anyhow::bail!("need a resolver");
+                    };
+                    let (header, questions, answers) = self.forward(resolver_addr, &buffer)?;
+                    //let header = DnsHeader::from_bytes(&buffer[..12]);
+                    //let questions =
+                    //    DnsQuestion::from_bytes(header.question_records, &buffer[12..])?;
 
-                    let questions =
-                        DnsQuestion::from_bytes(header.question_records, &buffer[12..])?;
-                    let mut answers = vec![];
-                    for question in questions.iter() {
-                        answers.push(DnsAnswer::from_question(question));
-                    }
+                    //let mut answers = vec![];
+                    //for question in questions.iter() {
+                    //    answers.push(DnsAnswer::from_question(question));
+                    //}
 
+                    let response_header = self.response_header(&header);
                     let message = DnsMessage {
-                        header,
+                        header: response_header,
                         question_records: questions,
                         answer_records: answers,
                     };
@@ -75,7 +120,7 @@ impl DnsServer {
                 }
                 Err(e) => {
                     eprintln!("Error receiving data: {}", e);
-                    bail!("something went wrong")
+                    anyhow::bail!("something went wrong")
                 }
             }
         }

@@ -3,7 +3,7 @@ use std::io::BufRead;
 use crate::{message::IntoBytes, utils::get_bits};
 use anyhow::Result;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct DnsQuestion {
     pub(crate) domain: Vec<u8>,
     pub(crate) record_type: u16,
@@ -12,7 +12,7 @@ pub(crate) struct DnsQuestion {
 
 impl DnsQuestion {
     // TODO: Fix mad offset shenanigans
-    pub(crate) fn from_bytes(total_q: u16, buffer: &[u8]) -> Result<Vec<Self>> {
+    pub(crate) fn from_bytes(total_q: u16, buffer: &[u8]) -> Result<(usize, Vec<Self>)> {
         let mut idx = 0;
         let mut domain_buf = vec![];
         let mut questions = vec![];
@@ -51,7 +51,7 @@ impl DnsQuestion {
             }
         }
 
-        Ok(questions)
+        Ok((idx, questions))
     }
 }
 
